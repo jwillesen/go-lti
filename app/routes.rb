@@ -4,13 +4,7 @@ get '/' do
 end
 
 get '/tool_config.xml' do
-  host = request.scheme + "://" + request.host_with_port
-  url = host + "/lti_tool"
-  tc = IMS::LTI::ToolConfig.new(:title => "Go LTI Provider", :launch_url => url)
-  tc.description = "An LTI Provider to embed Go content."
-
-  headers 'Content-Type' => 'text/xml'
-  tc.to_xml(:indent => 2)
+  tool_config
 end
 
 get '/blank' do
@@ -19,4 +13,12 @@ end
 
 post '/lti_tool' do
   blank_board(19)
+end
+
+post '/editor_button' do
+  editor_button
+end
+
+get '/compact_board' do
+  erb :compact_board
 end

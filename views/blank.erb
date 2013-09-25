@@ -22,5 +22,15 @@
 </head>
 <body>
   <div class="eidogo-player-auto" sgf="sgf/blank-<%= @board_size %>.sgf"></div>
+
+  <h3>Parameters</h3>
+  <table>
+    <% params.keys.sort.each do |key| %>
+      <tr>
+        <td><%= key %></td>
+        <td><%= params[key] %></td>
+      </tr>
+    <% end %>
+  </table>
 </body>
 </html>

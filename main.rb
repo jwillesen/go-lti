@@ -1,6 +1,9 @@
 require 'bundler'
 Bundler.require
 require 'oauth/request_proxy/rack_request'
+require 'ims/lti/extensions'
+
+require 'uri'
 
 enable :sessions
 set :protection, :except => :frame_options
