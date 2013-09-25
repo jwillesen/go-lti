@@ -13,6 +13,10 @@ get '/tool_config.xml' do
   tc.to_xml(:indent => 2)
 end
 
+get '/blank' do
+  blank_board
+end
+
 post '/lti_tool' do
-  lti_launch
+  blank_board(19)
 end

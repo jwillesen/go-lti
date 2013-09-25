@@ -43,4 +43,11 @@ class GoLtiApplication < Sinatra::Application
     "lti launch successful!"
   end
 
+  def blank_board(board_size = nil)
+    @board_size ||= board_size
+    @board_size ||= params[:board_size]
+    @board_size ||= 19
+    erb :blank
+  end
+
 end
