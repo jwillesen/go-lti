@@ -39,6 +39,14 @@ get '/download/:current_user_id/:game_name' do
   download_sgf
 end
 
+get '/list' do
+  list_files
+end
+
+get '/view/:game_name' do
+  view_file
+end
+
 get '/pwd' do
   Dir.pwd
 end

@@ -167,6 +167,35 @@ class GoLtiApplication < Sinatra::Application
     File.read(path)
   end
 
+  def user_files
+    Dir.glob("#{save_dir(@tp.user_id)}/*.sgf").map {|f| File.basename(f) }
+  end
+
+  def list_files
+    err = already_authorized!
+    return err if err
+
+    erb :list_files
+  end
+
+  def view_file
+    err = already_authorized!
+    return err if err
+    return show_error('missing game_name') unless params[:game_name]
+
+    dir_name = save_dir(@tp.user_id)
+    game_name = params[:game_name]
+    path = "#{dir_name}/#{game_name}"
+    return 404 unless File.exist?(path)
+
+    @view_file_url = "/download/#{@tp.user_id}/#{game_name}"
+    erb :blank
+  end
+
+  def view_file_url
+    @view_file_url || "/sgf/blank-19.sgf"
+  end
+
   def tool_config
     launch_url = root_url + "/lti_tool"
     tc = IMS::LTI::ToolConfig.new(:title => "Go LTI Provider", :launch_url => launch_url)

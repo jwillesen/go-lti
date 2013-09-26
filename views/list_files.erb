@@ -1,0 +1,13 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="player/css/player.css" />
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+</head>
+<body>
+  <ul>
+  <% user_files.each do |file_name| %>
+    <li><a href="/view/<%= file_name %>"><%= file_name %></a></li>
+  <% end %>
+</ul>
+</body>
+</html>

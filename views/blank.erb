@@ -1,8 +1,8 @@
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="player/css/player.css" />
+  <link rel="stylesheet" type="text/css" href="/player/css/player.css" />
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-  <script src="player/js/all.compressed.js"></script>
+  <script src="/player/js/all.compressed.js"></script>
   <script type="text/javascript">
     $(document).ready(function() {
       window.ltigo = {
@@ -17,15 +17,15 @@
             container:      "go-board",
             sgfUrl:         sgfUrl,
             //hooks:          ltigo.hooks,
-            //saveUrl:        "/save",
-            //downloadUrl:    "/download/<%= current_user_id %>/",
+            saveUrl:        "bad", // to make some features work, but we provide our own links right now
+            downloadUrl:    "bad",
             theme:          "standard", // "standard" or "compact"
             mode:           "play", // "play" or "view"
             showComments:    true,
             showPlayerInfo:  true,
             showGameInfo:    true,
             showTools:       true,
-            showOptions:     false,
+            showOptions:     false, // so we don't show the broken save and download urls above
             showNavTree:     true,
             markCurrent:     true,
             markVariations:  true,
@@ -57,7 +57,7 @@
         }
       };
 
-      eidogoConfig = ltigo.makeConfig("sgf/blank-19.sgf")
+      eidogoConfig = ltigo.makeConfig("<%= view_file_url %>")
 
       var player = new eidogo.Player(eidogoConfig)
     })
@@ -72,7 +72,7 @@
   <p>
     <a href="javascript:ltigo.save();">Save</a>
     <a href="javascript:ltigo.download();">Download</a>
-
+    <a href="/list">Show Existing Files</a>
   </p>
 
   <div id="go-board"></div>
