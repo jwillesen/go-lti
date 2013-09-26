@@ -1,8 +1,18 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="player/css/player.css" />
+  <script src="player/js/all.compressed.js"></script>
   <script type="text/javascript">
-    eidogoConfig = {
+    window.onload = function() {
+      window.ltigo = {
+        setSize: function(size) {
+          player.loadSgf({sgfUrl: "/sgf/blank-" + size + ".sgf"})
+        }
+      };
+
+      eidogoConfig = {
+        container:      "go-board",
+        sgfUrl:         "sgf/blank-19.sgf",
         theme:          "standard", // "standard" or "compact"
         mode:           "play", // "play" or "view"
         showComments:    true,
@@ -15,13 +25,21 @@
         markVariations:  true,
         markNext:        false,
         problemMode:     false,
-        enableShortcuts: true,
+        enableShortcuts: true
+      };
+
+      var player = new eidogo.Player(eidogoConfig)
     }
   </script>
-  <script src="player/js/all.compressed.js"></script>
 </head>
 <body>
-  <div class="eidogo-player-auto" sgf="sgf/blank-<%= @board_size %>.sgf"></div>
+  <p>
+    <a href="javascript:ltigo.setSize(9)">Load 9x9</a>
+    <a href="javascript:ltigo.setSize(13)">Load 13x13</a>
+    <a href="javascript:ltigo.setSize(19)">Load 19x19</a>
+  </p>
+
+  <div id="go-board"></div>
 
   <h3>Parameters</h3>
   <table>
