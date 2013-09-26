@@ -3,6 +3,8 @@ Bundler.require
 require 'oauth/request_proxy/rack_request'
 require 'ims/lti/extensions'
 
+require 'fileutils'
+require 'securerandom'
 require 'uri'
 
 enable :sessions

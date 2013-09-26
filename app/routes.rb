@@ -12,7 +12,7 @@ get '/blank' do
 end
 
 post '/lti_tool' do
-  blank_board(19)
+  blank_board
 end
 
 post '/editor_button' do
@@ -29,4 +29,16 @@ end
 
 get '/edit_board' do
   erb :edit_board
+end
+
+post '/save' do
+  save_sgf
+end
+
+get '/download/:current_user_id/:game_name' do
+  download_sgf
+end
+
+get '/pwd' do
+  Dir.pwd
 end

@@ -1,42 +1,78 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="player/css/player.css" />
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
   <script src="player/js/all.compressed.js"></script>
   <script type="text/javascript">
-    window.onload = function() {
+    $(document).ready(function() {
       window.ltigo = {
+        // hooks: {
+        //   saved: function(gameName) {
+        //     this.gameName = gameName
+        //   }
+        // },
+
+        makeConfig: function(sgfUrl) {
+          return {
+            container:      "go-board",
+            sgfUrl:         sgfUrl,
+            //hooks:          ltigo.hooks,
+            //saveUrl:        "/save",
+            //downloadUrl:    "/download/<%= current_user_id %>/",
+            theme:          "standard", // "standard" or "compact"
+            mode:           "play", // "play" or "view"
+            showComments:    true,
+            showPlayerInfo:  true,
+            showGameInfo:    true,
+            showTools:       true,
+            showOptions:     false,
+            showNavTree:     true,
+            markCurrent:     true,
+            markVariations:  true,
+            markNext:        false,
+            problemMode:     false,
+            enableShortcuts: true
+          };
+        },
+
+        save: function() {
+          gameName = prompt("Enter a name for this saved file", "enter a file name");
+          if (!gameName) return;
+          $.post("/save", {game_name: gameName, sgf: player.cursor.getGameRoot().toSgf()}, function(resultText) {
+            player.gameName = resultText;
+            player.unsavedChanges = false;
+          });
+        },
+
+        download: function() {
+          if (player.unsavedChanges || !player.gameName) {
+            alert("unsaved changes")
+            return;
+          }
+          location.href = "/download/<%= current_user_id %>/" + player.gameName
+        },
+
         setSize: function(size) {
-          player.loadSgf({sgfUrl: "/sgf/blank-" + size + ".sgf"})
+          player.loadSgf(ltigo.makeConfig("/sgf/blank-" + size + ".sgf"))
         }
       };
 
-      eidogoConfig = {
-        container:      "go-board",
-        sgfUrl:         "sgf/blank-19.sgf",
-        theme:          "standard", // "standard" or "compact"
-        mode:           "play", // "play" or "view"
-        showComments:    true,
-        showPlayerInfo:  true,
-        showGameInfo:    true,
-        showTools:       true,
-        showOptions:     true,
-        showNavTree:     true,
-        markCurrent:     true,
-        markVariations:  true,
-        markNext:        false,
-        problemMode:     false,
-        enableShortcuts: true
-      };
+      eidogoConfig = ltigo.makeConfig("sgf/blank-19.sgf")
 
       var player = new eidogo.Player(eidogoConfig)
-    }
+    })
   </script>
 </head>
 <body>
   <p>
-    <a href="javascript:ltigo.setSize(9)">Load 9x9</a>
-    <a href="javascript:ltigo.setSize(13)">Load 13x13</a>
-    <a href="javascript:ltigo.setSize(19)">Load 19x19</a>
+    <a href="javascript:ltigo.setSize(9);">Load 9x9</a>
+    <a href="javascript:ltigo.setSize(13);">Load 13x13</a>
+    <a href="javascript:ltigo.setSize(19);">Load 19x19</a>
+  </p>
+  <p>
+    <a href="javascript:ltigo.save();">Save</a>
+    <a href="javascript:ltigo.download();">Download</a>
+
   </p>
 
   <div id="go-board"></div>

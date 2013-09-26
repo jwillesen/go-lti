@@ -60,6 +60,10 @@ class GoLtiApplication < Sinatra::Application
     nil
   end
 
+  def current_user_id
+    @tp.user_id
+  end
+
   def lti_launch
     err = authorize!
     return err if err
@@ -68,9 +72,7 @@ class GoLtiApplication < Sinatra::Application
   end
 
   def blank_board(board_size = nil)
-    @board_size ||= board_size
-    @board_size ||= params[:board_size]
-    @board_size ||= 19
+    authorize!
     erb :blank
   end
 
@@ -129,6 +131,40 @@ class GoLtiApplication < Sinatra::Application
 
   def sgf_url
     root_url + "/sgf/blood_vomit.sgf"
+  end
+
+  def save_dir(user_id)
+    "saves/#{user_id}"
+  end
+
+  def save_sgf
+    err = already_authorized!
+    return err if err
+
+    uuid = SecureRandom.uuid
+    game_name = params[:game_name]
+    sgf = params[:sgf]
+    return show_error "missing sgf parameter" unless sgf
+    return show_error "missing gamaname parameter" unless game_name
+
+    dir_name = save_dir(@tp.user_id)
+    file_name = "#{game_name}___#{uuid}.sgf"
+    FileUtils.mkdir_p dir_name
+    File.open("#{dir_name}/#{file_name}", "wb") do |file|
+      file.write(sgf)
+    end
+
+    file_name
+  end
+
+  def download_sgf
+    return show_error('missing current_user_id') unless params[:current_user_id]
+    return show_error('missing game_name') unless params[:game_name]
+    dir_name = save_dir(params[:current_user_id])
+    game_name = params[:game_name]
+    path = "#{dir_name}/#{game_name}"
+    return 404 unless File.exist?(path)
+    File.read(path)
   end
 
   def tool_config
