@@ -14,5 +14,16 @@
   <% end %>
 </table>
 
+<h3>Session - launch_params</h3>
+<table>
+  <% session['launch_params'].keys.sort.each do |key| %>
+    <tr>
+      <td><%= key %></td>
+      <td><%= session['launch_params'][key] %></td>
+    </tr>
+  <% end %>
+</table>
+
+
 </body>
 </html>

@@ -1,0 +1,36 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="player/css/player.css" />
+  <style type="text/css">
+    body {
+        margin: 0;
+    }
+  </style>
+
+  <script type="text/javascript">
+    eidogoConfig = {
+      <% if load_path %>
+        loadPath: [<%= load_path %>],
+      <% end %>
+
+      theme:          "compact", // "standard" or "compact"
+      mode:           "view", // "play" or "view"
+      showComments:    true,
+      showPlayerInfo:  false,
+      showGameInfo:    false,
+      showTools:       false,
+      showOptions:     false,
+      showNavTree:     false,
+      markCurrent:     true,
+      markVariations:  false,
+      markNext:        false,
+      problemMode:     false,
+      enableShortcuts: true,
+    }
+  </script>
+  <script src="player/js/all.compressed.js"></script>
+</head>
+<body>
+  <div class="eidogo-player-auto" sgf="<%= sgf_url %>"></div>
+</body>
+</html>

@@ -19,6 +19,14 @@ post '/editor_button' do
   editor_button
 end
 
-get '/compact_board' do
-  erb :compact_board
+get '/embedded_board' do
+  embedded_board
+end
+
+get '/select_position' do
+  select_position
+end
+
+get '/edit_board' do
+  erb :edit_board
 end

@@ -1,0 +1,50 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="player/css/player.css" />
+  <script type="text/javascript">
+    window.onload = function() {
+      window.ltigo = {
+        embed: function() {
+          var path = player.cursor.getPath();
+          window.location.href = "/select_position?load_path=" + path;
+        }
+      };
+
+      eidogoConfig = {
+        container:      "go-board",
+        sgfUrl:         "sgf/blood_vomit.sgf",
+        theme:          "standard", // "standard" or "compact"
+        mode:           "play", // "play" or "view"
+        showComments:    true,
+        showPlayerInfo:  true,
+        showGameInfo:    true,
+        showTools:       true,
+        showOptions:     true,
+        showNavTree:     true,
+        markCurrent:     true,
+        markVariations:  true,
+        markNext:        false,
+        problemMode:     false,
+        enableShortcuts: true
+      };
+
+      var player = new eidogo.Player(eidogoConfig)
+    }
+  </script>
+  <script src="player/js/all.compressed.js"></script>
+</head>
+<body>
+  <p><a href="javascript:ltigo.embed()">Select this position</a></p>
+  <div id="go-board"></div>
+
+  <h3>Parameters</h3>
+  <table>
+    <% params.keys.sort.each do |key| %>
+      <tr>
+        <td><%= key %></td>
+        <td><%= params[key] %></td>
+      </tr>
+    <% end %>
+  </table>
+</body>
+</html>

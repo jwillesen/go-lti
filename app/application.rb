@@ -17,22 +17,46 @@ class GoLtiApplication < Sinatra::Application
     return true
   end
 
-  def authorize!
-    key = params['oauth_consumer_key']
+  def authorize_with_hash!(args)
+    key = args['oauth_consumer_key']
     secret = oauth_creds[key]
     unless key && secret
-      @tp = IMS::LTI::ToolProvider.new
+      @tp = IMS::LTI::ToolProvider.new(nil, nil, args)
       @tp.lti_msg = "authorization error"
       @tp.lti_errorlog = "authorization error"
-      return show_error "authorization error"
+      return show_error "authorization error at #{__FILE__}:#{__LINE__}"
     end
-    @tp = IMS::LTI::ToolProvider.new(key, secret, params)
+    @tp = IMS::LTI::ToolProvider.new(key, secret, args)
 
+    # success
+    nil
+  end
+
+  def authorize!
+    err = authorize_with_hash!(params)
+    return err if err
+
+    # these checks should also happen in already_authorized! ???
     return show_error "invalid request" unless @tp.valid_request?(request)
     return show_error "expired request" unless valid_request_time?
     return show_error "nonce error" unless valid_nonce?
 
-    # everything's ok
+    # everything's ok, store launch in the session
+    session['launch_params'] = @tp.to_params
+    nil
+  end
+
+  def already_authorized!
+    launch_params = session['launch_params']
+    return show_error unless launch_params
+    # probably should do some other checks on the session, to make sure it's still valid
+
+    err = authorize_with_hash!(launch_params)
+    return err if err
+
+    # any other checks should go here too? timeout check?
+
+    # ok, authorized
     nil
   end
 
@@ -51,7 +75,8 @@ class GoLtiApplication < Sinatra::Application
   end
 
   def content_redirect(options)
-    target_url = params['ext_content_return_url'] || params['launch_presentation_return_url']
+    launch_params = session['launch_params']
+    target_url = launch_params['ext_content_return_url'] || launch_params['launch_presentation_return_url']
     return show_error("no return url specified") unless target_url
     redirect target_url + "?" + ::URI.encode_www_form(options)
   end
@@ -63,12 +88,39 @@ class GoLtiApplication < Sinatra::Application
     return show_error "embedded use expected" unless params['ext_content_intended_use'] = 'embed'
     return show_error "embedded iframe expected" unless params['ext_content_return_types'].include?('iframe')
 
+    erb :edit_board
+  end
+
+  def select_position
+    err = already_authorized!
+    return err if err
+
+    embed_url = root_url + "/embedded_board"
+    embed_url_params = params.select { |k, v| ['load_path'].include?(k) }
+    unless embed_url_params.empty?
+      # the url parameter gets encoded later, so don't encode it here or it will be double encoded
+      embed_assignments = embed_url_params.map { |k,v| "#{k}=#{v}" }
+      embed_url += "?" + embed_assignments.join('&')
+    end
+
     content_redirect(
       return_type: 'iframe',
-      url: root_url + "/compact_board",
+      url: embed_url,
       width: 423,
       height: 535,
     )
+  end
+
+  def embedded_board
+    erb :embedded_board
+  end
+
+  def load_path
+    return nil unless params[:load_path] =~ /(\d+(,\d+)+)/
+    params[:load_path]
+    # num_csv = $1
+    # num_strs = num_str.split(',')
+    # nums = num_strs.map(&:to_i)
   end
 
   def root_url
@@ -98,8 +150,8 @@ class GoLtiApplication < Sinatra::Application
       url: launch_url,
       icon_url: root_url + "/images/go-icon.png",
       text: "go selection",
-      selection_width: 200,
-      selection_height: 200,
+      selection_width: 830,
+      selection_height: 710,
       enabled: true,
     })
 
