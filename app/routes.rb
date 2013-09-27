@@ -23,6 +23,10 @@ get '/embedded_board' do
   embedded_board
 end
 
+get '/embed/:user_id/:game_name' do
+  embedded_board
+end
+
 get '/select_position' do
   select_position
 end

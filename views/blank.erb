@@ -12,10 +12,12 @@
         //   }
         // },
 
-        makeConfig: function(sgfUrl) {
-          return {
+        makeConfig: function(sgfUrl, options) {
+          options = options || {}
+          result = {
             container:      "go-board",
             sgfUrl:         sgfUrl,
+            gameName:       options['gameName'],
             //hooks:          ltigo.hooks,
             saveUrl:        "bad", // to make some features work, but we provide our own links right now
             downloadUrl:    "bad",
@@ -33,6 +35,17 @@
             problemMode:     false,
             enableShortcuts: true
           };
+          return result;
+        },
+
+        embed: function() {
+          if (player.unsavedChanges) {
+            return alert("There are unsaved changes, please save first.");
+          }
+          var path = player.cursor.getPath();
+          window.location.href =
+            "/select_position?game_name=" + player.gameName +
+            "&load_path=" + path;
         },
 
         save: function() {
@@ -57,13 +70,16 @@
         }
       };
 
-      eidogoConfig = ltigo.makeConfig("<%= view_file_url %>")
+      eidogoConfig = ltigo.makeConfig("<%= view_file_url %>", {gameName: "<%= view_file_game_name %>"});
 
-      var player = new eidogo.Player(eidogoConfig)
+      var player = new eidogo.Player(eidogoConfig);
     })
   </script>
 </head>
 <body>
+  <% if for_embedding? %>
+    <p><a href="javascript:ltigo.embed()">Select this position</a></p>
+  <% end %>
   <p>
     <a href="javascript:ltigo.setSize(9);">Load 9x9</a>
     <a href="javascript:ltigo.setSize(13);">Load 13x13</a>

@@ -64,6 +64,10 @@ class GoLtiApplication < Sinatra::Application
     @tp.user_id
   end
 
+  def for_embedding?
+    session['launch_params']['ext_content_intended_use'] == 'embed'
+  end
+
   def lti_launch
     err = authorize!
     return err if err
@@ -90,7 +94,21 @@ class GoLtiApplication < Sinatra::Application
     return show_error "embedded use expected" unless params['ext_content_intended_use'] = 'embed'
     return show_error "embedded iframe expected" unless params['ext_content_return_types'].include?('iframe')
 
-    erb :edit_board
+    #erb :edit_board
+    erb :blank
+  end
+
+  def embedded_sgf_url
+    "#{root_url}/download/#{params[:user_id]}/#{params[:game_name]}"
+    #root_url + "/sgf/blood_vomit.sgf"
+  end
+
+  def load_path
+    return nil unless params[:load_path] =~ /(\d+(,\d+)+)/
+    params[:load_path]
+    # num_csv = $1
+    # num_strs = num_str.split(',')
+    # nums = num_strs.map(&:to_i)
   end
 
   def select_position
@@ -98,7 +116,8 @@ class GoLtiApplication < Sinatra::Application
     return err if err
 
     embed_url = root_url + "/embedded_board"
-    embed_url_params = params.select { |k, v| ['load_path'].include?(k) }
+    embed_url_params = params.select { |k, v| ['game_name', 'load_path'].include?(k) }
+    embed_url_params['user_id'] = current_user_id
     unless embed_url_params.empty?
       # the url parameter gets encoded later, so don't encode it here or it will be double encoded
       embed_assignments = embed_url_params.map { |k,v| "#{k}=#{v}" }
@@ -117,20 +136,8 @@ class GoLtiApplication < Sinatra::Application
     erb :embedded_board
   end
 
-  def load_path
-    return nil unless params[:load_path] =~ /(\d+(,\d+)+)/
-    params[:load_path]
-    # num_csv = $1
-    # num_strs = num_str.split(',')
-    # nums = num_strs.map(&:to_i)
-  end
-
   def root_url
     host = request.scheme + "://" + request.host_with_port
-  end
-
-  def sgf_url
-    root_url + "/sgf/blood_vomit.sgf"
   end
 
   def save_dir(user_id)
@@ -158,7 +165,7 @@ class GoLtiApplication < Sinatra::Application
     return show_error "missing sgf parameter" unless sgf
     return show_error "missing gamaname parameter" unless game_name
 
-    file_name = safe_sgf_file_to_disk(game_name, sgf)
+    file_name = save_sgf_file_to_disk(game_name, sgf)
     file_name
   end
 
@@ -210,12 +217,17 @@ class GoLtiApplication < Sinatra::Application
     path = "#{dir_name}/#{game_name}"
     return 404 unless File.exist?(path)
 
+    @view_file_game_name = game_name
     @view_file_url = "/download/#{@tp.user_id}/#{game_name}"
     erb :blank
   end
 
   def view_file_url
     @view_file_url || "/sgf/blank-19.sgf"
+  end
+
+  def view_file_game_name
+    @view_file_game_name || "null"
   end
 
   def tool_config
