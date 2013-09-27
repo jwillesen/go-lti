@@ -137,16 +137,8 @@ class GoLtiApplication < Sinatra::Application
     "saves/#{user_id}"
   end
 
-  def save_sgf
-    err = already_authorized!
-    return err if err
-
+  def save_sgf_file_to_disk(game_name, sgf)
     uuid = SecureRandom.uuid
-    game_name = params[:game_name]
-    sgf = params[:sgf]
-    return show_error "missing sgf parameter" unless sgf
-    return show_error "missing gamaname parameter" unless game_name
-
     dir_name = save_dir(@tp.user_id)
     file_name = "#{game_name}___#{uuid}.sgf"
     FileUtils.mkdir_p dir_name
@@ -156,6 +148,36 @@ class GoLtiApplication < Sinatra::Application
 
     file_name
   end
+
+  def save_sgf
+    err = already_authorized!
+    return err if err
+
+    game_name = params[:game_name]
+    sgf = params[:sgf]
+    return show_error "missing sgf parameter" unless sgf
+    return show_error "missing gamaname parameter" unless game_name
+
+    file_name = safe_sgf_file_to_disk(game_name, sgf)
+    file_name
+  end
+
+  def upload_sgf
+    err = already_authorized!
+    return err if err
+
+    game_name = params[:game_name]
+    sgf = params[:sgf]
+    sgf_tempfile = sgf[:tempfile]
+
+    return show_error('missing game_name') unless game_name
+    return show_error('missing sgf') unless sgf
+    return show_error('incorrect type for sgf') unless sgf_tempfile
+
+    file_name = save_sgf_file_to_disk(game_name, sgf_tempfile.read)
+    redirect "/view/#{file_name}"
+  end
+
 
   def download_sgf
     return show_error('missing current_user_id') unless params[:current_user_id]

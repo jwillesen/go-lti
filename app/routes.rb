@@ -47,6 +47,15 @@ get '/view/:game_name' do
   view_file
 end
 
+get '/upload' do
+  already_authorized!
+  erb :upload_form
+end
+
+post '/upload' do
+  upload_sgf
+end
+
 get '/pwd' do
   Dir.pwd
 end
