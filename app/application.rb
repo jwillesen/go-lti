@@ -68,6 +68,10 @@ class GoLtiApplication < Sinatra::Application
     session['launch_params']['ext_content_intended_use'] == 'embed'
   end
 
+  def for_launch_link?
+    session['launch_params']['ext_content_return_types'] =~ /lti_launch_url/
+  end
+
   def lti_launch
     err = authorize!
     return err if err
@@ -76,7 +80,12 @@ class GoLtiApplication < Sinatra::Application
   end
 
   def blank_board(board_size = nil)
-    authorize!
+    if params[:other_user_id] && params[:game_name]
+      return launch_view_user_file
+    end
+
+    err = authorize!
+    return err if err
     erb :blank
   end
 
@@ -111,25 +120,67 @@ class GoLtiApplication < Sinatra::Application
     # nums = num_strs.map(&:to_i)
   end
 
+  def choose_responder
+    case session['launch_params']['ext_content_return_types']
+    when /iframe/
+      'embed'
+    when /lti_launch_url/
+      'view'
+    else
+      'embed'
+    end
+  end
+
+  def choose_content_params(url)
+    result = {url: url}.merge case session['launch_params']['ext_content_return_types']
+    when /iframe/ then {
+      return_type: 'iframe',
+      width: 423,
+      height: 535,
+    }
+    when /lti_launch_url/ then {
+      return_type: 'lti_launch_url',
+    }
+    else {
+      return_type: 'insert_error_here',
+    }
+    end
+    result
+  end
+
+  def select_launch_position
+    err = already_authorized!
+    return err if err
+
+    responder = choose_responder
+    launch_url = root_url + "/lti_tool"
+    launch_url_params = params.select { |k, v| ['game_name', 'load_path'].include?(k) }
+    launch_url_params['other_user_id'] = @tp.user_id
+    unless launch_url_params.empty?
+      # the url parameter gets encoded later, so don't encode it here or it will be double encoded
+      launch_url_assignments = launch_url_params.map { |k,v| "#{k}=#{v}" }
+      launch_url += "?" + launch_url_assignments.join('&')
+    end
+
+    content_params = choose_content_params(launch_url)
+    content_redirect(content_params)
+  end
+
   def select_position
     err = already_authorized!
     return err if err
 
-    embed_url = root_url + "/embedded_board"
-    embed_url_params = params.select { |k, v| ['game_name', 'load_path'].include?(k) }
-    embed_url_params['user_id'] = current_user_id
+    responder = choose_responder
+    embed_url = root_url + "/#{responder}/#{current_user_id}/#{params[:game_name]}"
+    embed_url_params = params.select { |k, v| ['load_path'].include?(k) }
     unless embed_url_params.empty?
       # the url parameter gets encoded later, so don't encode it here or it will be double encoded
-      embed_assignments = embed_url_params.map { |k,v| "#{k}=#{v}" }
-      embed_url += "?" + embed_assignments.join('&')
+      embed_url_assignments = embed_url_params.map { |k,v| "#{k}=#{v}" }
+      embed_url += "?" + embed_url_assignments.join('&')
     end
 
-    content_redirect(
-      return_type: 'iframe',
-      url: embed_url,
-      width: 423,
-      height: 535,
-    )
+    content_params = choose_content_params(embed_url)
+    content_redirect(content_params)
   end
 
   def embedded_board
@@ -205,6 +256,20 @@ class GoLtiApplication < Sinatra::Application
     return err if err
 
     erb :list_files
+  end
+
+  def launch_view_user_file
+    err = authorize!
+    return err if err
+
+    other_user_id = params[:other_user_id]
+    game_name = params[:game_name]
+    return show_error('missing other_user_id') unless other_user_id
+    return show_error('missing game_name') unless game_name
+
+    @view_file_game_name = game_name
+    @view_file_url = "/download/#{other_user_id}/#{game_name}"
+    erb :blank
   end
 
   def view_file

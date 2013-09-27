@@ -31,6 +31,10 @@ get '/select_position' do
   select_position
 end
 
+get '/select_launch_position' do
+  select_launch_position
+end
+
 get '/edit_board' do
   erb :edit_board
 end
@@ -49,6 +53,10 @@ end
 
 get '/view/:game_name' do
   view_file
+end
+
+post 'view/:other_user_id/:game_name' do
+  launch_view_user_file
 end
 
 get '/upload' do

@@ -15,6 +15,9 @@
         makeConfig: function(sgfUrl, options) {
           options = options || {}
           result = {
+            <% if load_path %>
+              loadPath: [<%= load_path %>],
+            <% end %>
             container:      "go-board",
             sgfUrl:         sgfUrl,
             gameName:       options['gameName'],
@@ -48,6 +51,16 @@
             "&load_path=" + path;
         },
 
+        launchLink: function() {
+          if (player.unsavedChanges) {
+            return alert("There are unsaved changes, please save first.");
+          }
+          var path = player.cursor.getPath();
+          window.location.href =
+            "/select_launch_position?game_name=" + player.gameName +
+            "&load_path=" + path;
+        },
+
         save: function() {
           gameName = prompt("Enter a name for this saved file", "enter a file name");
           if (!gameName) return;
@@ -78,7 +91,9 @@
 </head>
 <body>
   <% if for_embedding? %>
-    <p><a href="javascript:ltigo.embed()">Select this position</a></p>
+    <p><a href="javascript:ltigo.embed()">Embed this position</a></p>
+  <% elsif for_launch_link? %>
+    <p><a href="javascript:ltigo.launchLink()">Link to this position</a></p>
   <% end %>
   <p>
     <a href="javascript:ltigo.setSize(9);">Load 9x9</a>
