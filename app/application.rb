@@ -27,6 +27,7 @@ class GoLtiApplication < Sinatra::Application
       return show_error "authorization error at #{__FILE__}:#{__LINE__}"
     end
     @tp = IMS::LTI::ToolProvider.new(key, secret, args)
+    @tp.extend IMS::LTI::Extensions::OutcomeData::ToolProvider
 
     # success
     nil
@@ -61,7 +62,7 @@ class GoLtiApplication < Sinatra::Application
   end
 
   def current_user_id
-    @tp.user_id
+    params[:other_user_id] || params[:current_user_id] || @tp.user_id
   end
 
   def for_embedding?
@@ -70,6 +71,13 @@ class GoLtiApplication < Sinatra::Application
 
   def for_launch_link?
     session['launch_params']['ext_content_return_types'] =~ /lti_launch_url/
+  end
+
+  def for_submission?
+    lp = session['launch_params']
+    return  lp['ext_ims_lis_basic_outcome_url'] &&
+            lp['ext_outcome_data_values_accepted'] =~ /url/ &&
+            lp['roles'] =~ /learner/i
   end
 
   def lti_launch
@@ -183,6 +191,26 @@ class GoLtiApplication < Sinatra::Application
     content_redirect(content_params)
   end
 
+  def send_submission
+    err = already_authorized!
+    return err if err
+
+    game_name = params[:game_name]
+    return show_error "missing game_name parameter" unless game_name
+
+    submission_url = root_url + "/view/#{@tp.user_id}/#{params[:game_name]}"
+    submission_url += "?load_path=#{params[:load_path]}" if params[:load_path]
+
+    result = @tp.post_replace_result_with_data!(nil, "url" => submission_url)
+    if result.success?
+      "Submission Successful"
+    elsif result.processing?
+      "Submission is processing, please check on it later"
+    else
+      "Submission Failed"
+    end
+  end
+
   def embedded_board
     erb :embedded_board
   end
@@ -214,7 +242,7 @@ class GoLtiApplication < Sinatra::Application
     game_name = params[:game_name]
     sgf = params[:sgf]
     return show_error "missing sgf parameter" unless sgf
-    return show_error "missing gamaname parameter" unless game_name
+    return show_error "missing game_name parameter" unless game_name
 
     file_name = save_sgf_file_to_disk(game_name, sgf)
     file_name
@@ -262,6 +290,17 @@ class GoLtiApplication < Sinatra::Application
     err = authorize!
     return err if err
 
+    other_user_id = params[:other_user_id]
+    game_name = params[:game_name]
+    return show_error('missing other_user_id') unless other_user_id
+    return show_error('missing game_name') unless game_name
+
+    @view_file_game_name = game_name
+    @view_file_url = "/download/#{other_user_id}/#{game_name}"
+    erb :blank
+  end
+
+  def view_user_file
     other_user_id = params[:other_user_id]
     game_name = params[:game_name]
     return show_error('missing other_user_id') unless other_user_id

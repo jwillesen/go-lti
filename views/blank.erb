@@ -61,6 +61,16 @@
             "&load_path=" + path;
         },
 
+        sendSubmission: function() {
+          if (player.unsavedChanges) {
+            return alert("There are unsaved changes, please save first.");
+          }
+          var path = player.cursor.getPath();
+          window.location.href =
+            "/send_submission?game_name=" + player.gameName +
+            "&load_path=" + path;
+        },
+
         save: function() {
           gameName = prompt("Enter a name for this saved file", "enter a file name");
           if (!gameName) return;
@@ -94,6 +104,8 @@
     <p><a href="javascript:ltigo.embed()">Embed this position</a></p>
   <% elsif for_launch_link? %>
     <p><a href="javascript:ltigo.launchLink()">Link to this position</a></p>
+  <% elsif for_submission? %>
+    <p><a href="javascript:ltigo.sendSubmission()">Submit Assignment</a></p>
   <% end %>
   <p>
     <a href="javascript:ltigo.setSize(9);">Load 9x9</a>
@@ -109,6 +121,7 @@
 
   <div id="go-board"></div>
 
+<!--
   <h3>Parameters</h3>
   <table>
     <% params.keys.sort.each do |key| %>
@@ -118,5 +131,6 @@
       </tr>
     <% end %>
   </table>
+ -->
 </body>
 </html>
